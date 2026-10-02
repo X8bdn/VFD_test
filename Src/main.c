@@ -4,6 +4,13 @@
 #include "main.h"
 #include "stm32l432xx.h"
 
+//macros' definitions
+#define TIM1_PSC_VAL ((uint16_t)0)
+#define TIM1_ARR_VAL ((uint8_t)200-1)
+
+#define TIM2_PSC_VAL ((uint16_t)4000-1)
+#define TIM2_ARR_VAL ((uint8_t)(1-1))
+
 //XYZ_Init(); func prototypes section
 void SysClockCFG_Init(void);
 void TIM1_PWM_Init(void);
@@ -18,6 +25,7 @@ void TIM2_IRQHandler(void);
 
 int main(void)
 {
+
 
 	/*RCC_APB1ENR_t_1 volatile *const pAPB1Reg = (RCC_APB1ENR_t_1*) 0x40021058 ;
 	RCC_APB2ENR_t volatile *const pAPB2Reg = (RCC_APB2ENR_t*) 0x40021060 ;
@@ -37,12 +45,12 @@ int main(void)
 
 	*/
 
-	void SysClockCFG_Init(void);
-	void TIM1_PWM_Init(void);
-	void TIM2_Init(void);
-	void I2C1_Init(void);
-	void SPI1_Init(void);
-	void GPIO_Init(void);
+	void SysClockCFG_Init();
+	void TIM1_PWM_Init();
+	void TIM2_Init();
+	void I2C1_Init();
+	void SPI1_Init();
+	void GPIO_Init();
 
 
 
@@ -51,7 +59,7 @@ int main(void)
 
 
 
-    /* Loop forever */
+    /* Loop forever */ss
 	for(;;);
 }
 
@@ -62,27 +70,37 @@ void SysClockCFG_Init(void){
 }
 
 void TIM1_PWM_Init(void){
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN; 	//enabling GPIOA for PWM output
-	RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;		//enabling TIM1 peripheral( NO PWM GENERATION YET)
-	GPIOA->MODER |=((1<<23)|(1<<17)); 		//setting pins PA_8 and PA_11 to "Alt Func" mode
-	GPIOA->AFR[1] |= ((1<<0)|(1<<12)); 		//enabled AF1 Alt Function mode for PA_8(TIM1C1) and PA_11(TIM1C4)
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN; 		//enabling GPIOA for PWM output
+	RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
+	//enabling TIM1 peripheral( NO PWM GENERATION YET)
+	GPIOA->MODER &= ~ ((3<<16)|(3<<22));		//clearing bits 16,17 and 22,23
+	GPIOA->MODER |=((1<<23)|(1<<17)); 			//setting pins PA_8 and PA_11 to "Alt Func" mode
+
+	GPIOA->AFR[1] &= ~ ((0xF<<0)|(0xF<<12));	//clearing bits 0-4 and 12-15
+	GPIOA->AFR[1] |= ((1<<0)|(1<<12)); 			//enabled AF1 Alt Function mode for PA_8(TIM1C1) and PA_11(TIM1C4)
 	//ENABLE PA8(IPWM_A) + PA11(IPWM_B) FOR L9110S PWM OUTPUT
+
+	TIM1->PSC = (TIM1_PSC_VAL);
+	TIM1->ARR = (TIM1_ARR_VAL);
+
 }
 
 void TIM2_Init(void){
 	RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;		//enabling TIM2 peripheral
+	TIM2->PSC = TIM2_PSC_VAL;
+	TIM2->ARR = (TIM2_ARR_VAL);
 }
 
 void I2C1_Init(void){
-	RCC->APB1ENR1 |= RCC_APB1ENR1_I2C1EN;	//enabling I2C1
+	RCC->APB1ENR1 |= RCC_APB1ENR1_I2C1EN;		//enabling I2C1 peripheral
 }
 
 void SPI1_Init(void){
-	RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;		//enabling SPI1
+	RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;			//enabling SPI1 peripheral
 }
 
 void GPIO_Init(void){
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN; 	//enabling GPIOA for PWM output
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN; 		//enabling GPIOA for PWM output
 
 
 }
